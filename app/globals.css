@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Reusable utility classes */
+.gradient-bg {
+  background: linear-gradient(to right, #34d399, #06b6d4);
+}
+
+.card {
+  @apply bg-white rounded-2xl shadow-lg p-6;
+}
+
+.section {
+  @apply py-20 px-6;
+}
+
+.container-custom {
+  @apply max-w-7xl mx-auto;
+}
+
+.heading {
+  @apply text-4xl md:text-5xl font-bold tracking-tight;
+}
+
+.subheading {
+  @apply text-lg text-gray-600 mt-4;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-xl px-6 py-3 font-semibold text-white bg-emerald-500 hover:bg-emerald-600 transition;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-xl px-6 py-3 font-semibold border border-gray-300 hover:bg-gray-100 transition;
+} 
