@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { pricingData } from "@/lib/pricingData";
 import { generateAudit } from "@/lib/auditEngine";
 import { db } from "@/lib/firebase";
-import {collection, addDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 
 
@@ -70,6 +70,7 @@ export default function SpendForm() {
 
       const auditRef = doc(db, "audits", auditId);
 
+      // 1. Update Firestore with lead data
       await updateDoc(auditRef, {
         lead: {
           email: leadForm.email,
@@ -81,8 +82,29 @@ export default function SpendForm() {
         leadSubmittedAt: Date.now(),
       });
 
-      console.log("Lead submitted");
+      // 2. Send email
+      const totalMonthlySavings = result.reduce(
+        (total: number, item: any) => total + item.monthlySavings, 0
+      );
 
+      const totalAnnualSavings = result.reduce(
+        (total: number, item: any) => total + item.annualSavings, 0
+      );
+
+      await fetch("/api/send-audit-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: leadForm.email,
+          shareableLink: `${window.location.origin}/audit/${auditId}`,
+          totalMonthlySavings,
+          totalAnnualSavings,
+        }),
+      });
+
+      console.log("Lead submitted & email sent");
       setLeadSubmitted(true);
     } catch (error) {
       console.error("Lead submit error:", error);
@@ -522,7 +544,11 @@ export default function SpendForm() {
                         <p className="mt-3 text-gray-300 leading-7">
                           We did not identify major optimization opportunities at the moment. Your current AI stack already appears reasonably optimized for your current usage patterns.
                         </p>
-                        <button className="mt-6 rounded-2xl bg-white px-6 py-3 font-semibold text-black transition hover:scale-[1.02]">
+                        <button
+                          onClick={() => {
+                            document.getElementById("lead-form")?.scrollIntoView({ behavior: "smooth" });
+                          }}
+                          className="mt-6 rounded-2xl bg-white px-6 py-3 font-semibold text-black transition hover:scale-[1.02]">
                           Notify Me About Future Optimizations
                         </button>
                       </>
@@ -534,7 +560,11 @@ export default function SpendForm() {
                         <p className="mt-3 text-gray-300 leading-7">
                           Your stack may have meaningful optimization opportunities. Credex can help your team capture and manage these savings more efficiently.
                         </p>
-                        <button className="mt-6 rounded-2xl bg-emerald-400 px-6 py-3 font-semibold text-black transition hover:scale-[1.02]">
+                        <button
+                          onClick={() => {
+                            document.getElementById("lead-form")?.scrollIntoView({ behavior: "smooth" });
+                          }}
+                          className="mt-6 rounded-2xl bg-emerald-400 px-6 py-3 font-semibold text-black transition hover:scale-[1.02]">
                           Explore Credex
                         </button>
                       </>
@@ -568,10 +598,10 @@ export default function SpendForm() {
                       <h3 className="text-3xl font-black">{item.toolName}</h3>
                       <span
                         className={`rounded-full px-4 py-1 text-sm font-semibold ${item.action === "upgrade"
-                            ? "bg-blue-500/20 text-blue-300"
-                            : item.action === "downgrade"
-                              ? "bg-yellow-500/20 text-yellow-300"
-                              : "bg-emerald-500/20 text-emerald-300"
+                          ? "bg-blue-500/20 text-blue-300"
+                          : item.action === "downgrade"
+                            ? "bg-yellow-500/20 text-yellow-300"
+                            : "bg-emerald-500/20 text-emerald-300"
                           }`}
                       >
                         {item.action.toUpperCase()}
@@ -690,7 +720,7 @@ export default function SpendForm() {
           </div>
 
           {/* LEAD CAPTURE */}
-          <div className="rounded-[28px] border bg-white p-8 shadow-sm">
+          <div id="lead-form" className="rounded-[28px] border bg-white p-8 shadow-sm">
             <h2 className="text-3xl font-black text-black">
               Stay Updated
             </h2>
