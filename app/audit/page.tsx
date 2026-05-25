@@ -7,7 +7,7 @@ export default function AuditPage() {
     <main className="min-h-screen bg-[#081120] px-6 py-20 text-white">
       <div className="mx-auto max-w-5xl">
         <div className="text-center">
-          <h1 className="text-5xl font-black">
+          <h1 className="text-5xl font-black text-emerald-400">
             AI Spend Audit
           </h1>
 
@@ -16,7 +16,7 @@ export default function AuditPage() {
           </p>
         </div>
 
-        <div className="mt-16">
+        <div className="mt-0">
           <SpendForm />
         </div>
       </div>
