@@ -1,23 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+
+
 
 export default function Hero() {
-  const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSubmitting(false);
-    alert("Thanks for signing up! We'll be in touch soon.");
-    setEmail("");
-  };
+const router = useRouter();
 
   return (
-    <section className="relative overflow-hidden px-6 pb-20 pt-20 md:pt-28">
+    <section className="relative overflow-hidden px-6 pb-20 pt-10 md:pt-15">
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute left-1/2 top-0 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-blue-500/20 blur-[120px]" />
@@ -51,6 +45,8 @@ export default function Hero() {
 
         <div className="mt-10 flex justify-center">
           <button
+            onClick={() => router.push("/audit")} 
+
             type="button"
             className="rounded-xl bg-gradient-to-r from-emerald-400 to-emerald-500 px-8 py-4 font-bold text-black shadow-lg shadow-emerald-500/25 transition-all hover:scale-105 hover:shadow-emerald-500/40"
           >

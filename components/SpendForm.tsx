@@ -30,12 +30,20 @@ interface SpendAuditForm {
   teamSize: number;
   primaryUseCase: string;
   tools: ToolSpend[];
+
 }
 
 const defaultForm: SpendAuditForm = {
-  teamSize: 1,
+  teamSize: 0,
   primaryUseCase: "coding",
-  tools: [],
+  tools: [
+    {
+      toolId: "",
+      selectedPlanId: "",
+      monthlySpend: 0,
+      seats: 0,
+    },
+  ],
 };
 
 // Generate or retrieve unique user ID
@@ -56,13 +64,62 @@ export default function SpendForm() {
   const [userId] = useState<string>(getUserId());
 
   // Placeholder states for lead form features to prevent crashing if declared outside snippet
-  const [leadForm, setLeadForm] = useState({ email: "", company: "", role: "" });
+  const [leadForm, setLeadForm] = useState({ email: "", company: "", role: "", website: "" });
   const [leadSubmitted, setLeadSubmitted] = useState(false);
   const [auditId, setAuditId] = useState<string | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [leadErrors, setLeadErrors] = useState<Record<string, string>>({});
+
+  const validateSpendForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    console.log("Validating form data:", formData);
+    if (!formData.tools[0]?.toolId) {
+      newErrors.tool = "Please select a tool";
+    }
+    if (!formData.tools[0]?.selectedPlanId) {
+      newErrors.plan = "Please select a plan";
+    }
+    if (!formData.tools[0]?.monthlySpend || formData.tools[0]?.monthlySpend <= 0) {
+      newErrors.spend = "Please enter monthly spend";
+    }
+    if (!formData.tools[0]?.seats || formData.tools[0]?.seats < 1) {
+      newErrors.seats = "Please enter valid seats";
+    }
+    if (!formData.teamSize || formData.teamSize < 1) {
+      newErrors.teamSize = "Please enter team size";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateLeadForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!leadForm.email) {
+      newErrors.email = "Email is required";
+    } else if (!emailRegex.test(leadForm.email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+
+    setLeadErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
 
   const handleLeadSubmit = async () => {
+    if (!validateLeadForm()) return; // Stop if validation fails
     try {
+      if (leadForm.website) {
+        console.log("🚫 Bot detected — submission blocked");
+        setLeadSubmitted(true); // Fake success to confuse bots
+        return;
+      }
+
       if (!auditId) {
         console.error("Missing audit ID");
         return;
@@ -104,6 +161,13 @@ export default function SpendForm() {
         }),
       });
 
+      // Clear lead form
+      setLeadForm({ email: "", company: "", role: "", website: "" });
+      // Show toast
+      setToastMessage("✅ You’ll receive future optimization updates.");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+
       console.log("Lead submitted & email sent");
       setLeadSubmitted(true);
     } catch (error) {
@@ -129,27 +193,7 @@ export default function SpendForm() {
     );
   }, [formData.tools]);
 
-  const addTool = () => {
-    setFormData((prev) => ({
-      ...prev,
-      tools: [
-        ...prev.tools,
-        {
-          toolId: "",
-          selectedPlanId: "",
-          monthlySpend: 0,
-          seats: 1,
-        },
-      ],
-    }));
-  };
 
-  const removeTool = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      tools: prev.tools.filter((_, i) => i !== index),
-    }));
-  };
 
   const updateTool = (
     index: number,
@@ -208,6 +252,7 @@ export default function SpendForm() {
         `${item.toolName}: ${item.currentPlan} → ${item.recommendedPlan} (save ₹${item.monthlySavings}/month)`
       ).join('\n')}
       
+      Important: Do NOT include any headings or titles like "AI Spend Audit Summary" in your response. Just provide the plain paragraph summary.
       Make it actionable and encouraging. If savings are minimal, acknowledge their good optimization.`;
 
       const response = await fetch(
@@ -309,6 +354,7 @@ export default function SpendForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateSpendForm()) return; // Stop if validation fails
     console.log("FORM DATA:");
     console.log(formData);
 
@@ -325,10 +371,28 @@ export default function SpendForm() {
     setTimeout(() => {
       storeAuditInFirebase(auditResult, formData);
     }, 2000);
+    setFormData(defaultForm);
+    localStorage.removeItem("audit-form");
+
+    // Show toast
+    setToastMessage("✅ Audit generated successfully!");
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+
+    // Scroll to summary
+    setTimeout(() => {
+      document.getElementById("audit-result")?.scrollIntoView({ behavior: "smooth" });
+    }, 500);
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 text-black">
+    <div className="w-full p-6 text-black">
+      {/* TOAST */}
+      {showToast && (
+        <div className="fixed top-6 right-6 z-[150] bg-black text-white px-6 py-4 rounded-2xl shadow-2xl animate-bounce">
+          {toastMessage}
+        </div>
+      )}
       {/* HEADER */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold">AI Spend Audit</h1>
@@ -348,15 +412,15 @@ export default function SpendForm() {
               <select
                 value={formData.tools[0]?.toolId || ""}
                 onChange={(e) => {
+                  setErrors(prev => ({ ...prev, tool: "" }));
                   if (formData.tools.length === 0) {
                     setFormData((prev) => ({
                       ...prev,
                       tools: [
                         {
+                          ...prev.tools[0],
                           toolId: e.target.value,
                           selectedPlanId: "",
-                          monthlySpend: 0,
-                          seats: 1,
                         },
                       ],
                     }));
@@ -364,7 +428,7 @@ export default function SpendForm() {
                     updateTool(0, "toolId", e.target.value);
                   }
                 }}
-                className="w-full border rounded-xl px-4 py-3"
+                className={`w-full border rounded-xl px-4 py-3 ${errors.tool ? "border-red-500" : ""}`}
               >
                 <option value="">Select Tool</option>
                 {pricingData.map((item) => (
@@ -373,6 +437,7 @@ export default function SpendForm() {
                   </option>
                 ))}
               </select>
+              {errors.tool && <p className="text-red-500 text-sm mt-1">{errors.tool}</p>}
             </div>
 
             {/* PLAN */}
@@ -381,11 +446,12 @@ export default function SpendForm() {
               <select
                 value={formData.tools[0]?.selectedPlanId || ""}
                 onChange={(e) => {
+                  setErrors(prev => ({ ...prev, plan: "" }));
                   if (formData.tools.length > 0) {
                     updateTool(0, "selectedPlanId", e.target.value);
                   }
                 }}
-                className="w-full border rounded-xl px-4 py-3"
+                className={`w-full border rounded-xl px-4 py-3 ${errors.plan ? "border-red-500" : ""}`}
               >
                 <option value="">Select Plan</option>
                 {getPlans(formData.tools[0]?.toolId || "").map((plan) => (
@@ -394,6 +460,7 @@ export default function SpendForm() {
                   </option>
                 ))}
               </select>
+              {errors.plan && <p className="text-red-500 text-sm mt-1">{errors.plan}</p>}
             </div>
 
             {/* MONTHLY SPEND */}
@@ -404,13 +471,15 @@ export default function SpendForm() {
                 min={0}
                 value={formData.tools[0]?.monthlySpend || 0}
                 onChange={(e) => {
+                  setErrors(prev => ({ ...prev, spend: "" }));
                   if (formData.tools.length > 0) {
                     updateTool(0, "monthlySpend", Number(e.target.value));
                   }
                 }}
-                className="w-full border rounded-xl px-4 py-3"
+                className={`w-full border rounded-xl px-4 py-3 ${errors.spend ? "border-red-500" : ""}`}
                 placeholder="1999"
               />
+              {errors.spend && <p className="text-red-500 text-sm mt-1">{errors.spend}</p>}
             </div>
 
             {/* SEATS */}
@@ -421,14 +490,17 @@ export default function SpendForm() {
               <input
                 type="number"
                 min={1}
-                value={formData.tools[0]?.seats || 1}
+                value={formData.tools[0]?.seats}
                 onChange={(e) => {
+                  setErrors(prev => ({ ...prev, seats: "" }));
                   if (formData.tools.length > 0) {
                     updateTool(0, "seats", Number(e.target.value));
                   }
                 }}
-                className="w-full border rounded-xl px-4 py-3"
+                defaultValue={0}
+                className={`w-full border rounded-xl px-4 py-3 ${errors.seats ? "border-red-500" : ""}`}
               />
+              {errors.seats && <p className="text-red-500 text-sm mt-1">{errors.seats}</p>}
             </div>
 
             {/* TEAM SIZE */}
@@ -437,15 +509,18 @@ export default function SpendForm() {
               <input
                 type="number"
                 min={1}
-                value={formData.teamSize}
-                onChange={(e) =>
+                value={formData.teamSize || 0}
+                onChange={(e) => {
+                  setErrors(prev => ({ ...prev, teamSize: "" }));
                   setFormData((prev) => ({
                     ...prev,
                     teamSize: Number(e.target.value),
-                  }))
-                }
-                className="w-full border rounded-xl px-4 py-3"
+                  }));
+                }}
+                defaultValue={0}
+                className={`w-full border rounded-xl px-4 py-3 ${errors.teamSize ? "border-red-500" : ""}`}
               />
+              {errors.teamSize && <p className="text-red-500 text-sm mt-1">{errors.teamSize}</p>}
             </div>
 
             {/* PRIMARY USE CASE */}
@@ -491,7 +566,7 @@ export default function SpendForm() {
       </form>
 
       {result && result.length > 0 && (
-        <div className="mt-12 space-y-8">
+        <div id="audit-result" className="mt-12 space-y-8">
           {/* AI Summary Section */}
           {isGeneratingSummary ? (
             <div className="rounded-[28px] border border-white/10 bg-[#0f172a] p-7 text-white shadow-xl">
@@ -728,45 +803,66 @@ export default function SpendForm() {
               Get notified when new optimization opportunities apply to your stack.
             </p>
 
-            <div className="mt-8 grid md:grid-cols-2 gap-5">
-              <input
-                type="email"
-                placeholder="Email"
-                value={leadForm.email}
-                onChange={(e) =>
-                  setLeadForm((prev) => ({
-                    ...prev,
-                    email: e.target.value,
-                  }))
-                }
-                className="border text-black rounded-2xl px-5 py-4"
-              />
-
+            <div className="mt-8 grid md:grid-cols-2 gap-5 items-start">
+              {/* Honeypot */}
               <input
                 type="text"
-                placeholder="Company"
-                value={leadForm.company}
+                name="website"
+                style={{ display: 'none' }}
+                tabIndex={-1}
+                autoComplete="off"
+                value={leadForm.website || ""}
                 onChange={(e) =>
                   setLeadForm((prev) => ({
                     ...prev,
-                    company: e.target.value,
+                    website: e.target.value,
                   }))
                 }
-                className="border text-black rounded-2xl px-5 py-4"
               />
 
-              <input
-                type="text"
-                placeholder="Role"
-                value={leadForm.role}
-                onChange={(e) =>
-                  setLeadForm((prev) => ({
-                    ...prev,
-                    role: e.target.value,
-                  }))
-                }
-                className="border text-black rounded-2xl px-5 py-4"
-              />
+              <div className="min-h-[70px]">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={leadForm.email}
+                  onChange={(e) => {
+                    setLeadErrors(prev => ({ ...prev, email: "" }));
+                    setLeadForm((prev) => ({ ...prev, email: e.target.value }));
+                  }}
+                  className={`border text-black rounded-2xl px-5 py-4 w-full ${leadErrors.email ? "border-red-500" : ""}`}
+                />
+                {leadErrors.email && <p className="text-red-500 text-sm mt-1">{leadErrors.email}</p>}
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  placeholder="Company"
+                  value={leadForm.company}
+                  onChange={(e) =>
+                    setLeadForm((prev) => ({
+                      ...prev,
+                      company: e.target.value,
+                    }))
+                  }
+                  className="border text-black rounded-2xl px-5 py-4 w-full"
+                />
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  placeholder="Role"
+                  value={leadForm.role}
+                  onChange={(e) =>
+                    setLeadForm((prev) => ({
+                      ...prev,
+                      role: e.target.value,
+                    }))
+                  }
+                  className="border text-black rounded-2xl px-5 py-4 w-full"
+                />
+              </div>
 
               <button
                 onClick={handleLeadSubmit}
@@ -799,10 +895,12 @@ export default function SpendForm() {
                     navigator.clipboard.writeText(
                       `${window.location.origin}/audit/${auditId}`
                     );
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 500);
                   }}
                   className="rounded-2xl bg-white text-black px-6 py-4 font-semibold"
                 >
-                  Copy Link
+                  {copied ? "Copied!" : "Copy Link"}
                 </button>
               </div>
             </div>
