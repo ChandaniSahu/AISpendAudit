@@ -6,32 +6,15 @@ import { generateAudit } from "@/lib/auditEngine";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
+import { ToolSpend, SpendAuditForm ,PrimaryUseCase} from "@/types/data";
 
-
-
-
-
-const useCases = [
+const useCases: PrimaryUseCase[] = [
   "coding",
   "writing",
   "research",
   "data",
   "mixed",
-] as const;
-
-interface ToolSpend {
-  toolId: string;
-  selectedPlanId: string;
-  monthlySpend: number;
-  seats: number;
-}
-
-interface SpendAuditForm {
-  teamSize: number;
-  primaryUseCase: string;
-  tools: ToolSpend[];
-
-}
+];
 
 const defaultForm: SpendAuditForm = {
   teamSize: 0,
@@ -528,12 +511,12 @@ export default function SpendForm() {
               <label className="block mb-2 font-medium">Primary Use Case</label>
               <select
                 value={formData.primaryUseCase}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    primaryUseCase: e.target.value,
-                  }))
-                }
+               onChange={(e) =>
+  setFormData((prev) => ({
+    ...prev,
+    primaryUseCase: e.target.value as PrimaryUseCase,
+  }))
+}
                 className="w-full border rounded-xl px-4 py-3"
               >
                 {useCases.map((item) => (

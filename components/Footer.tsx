@@ -46,10 +46,10 @@ export default function Footer() {
           {/* Company Info */}
           <div className="md:col-span-2">
                 <Image
-                  src="/logo1.png"
+                  src="/logo.png"
                   alt="AI Spend Audit Logo"
-                  width={40}
-                  height={40}
+                  width={200}
+                  height={200}
                   className="h-20 w-40 object-cover"
                   priority
                 />

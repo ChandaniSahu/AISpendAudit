@@ -2,9 +2,6 @@ import {
   ChartBarIcon, 
   LightBulbIcon, 
   CurrencyDollarIcon,
-  ShieldCheckIcon,
-  BoltIcon,
-  UserGroupIcon 
 } from "@heroicons/react/24/outline";
 
 const features = [

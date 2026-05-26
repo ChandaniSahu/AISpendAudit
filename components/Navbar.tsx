@@ -1,6 +1,4 @@
 "use client";
-
-import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -13,11 +11,11 @@ const router = useRouter();
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         {/* Logo */}
         <Image
-      src="/logo1.png"
+      src="/logo.png"
       alt="AI Spend Audit Logo"
-      width={40}
-      height={40}
-      className="h-14 w-30 object-contain"
+      width={200}
+      height={200}
+      className="h-20 w-40 object-cover"
       priority
     />
 
