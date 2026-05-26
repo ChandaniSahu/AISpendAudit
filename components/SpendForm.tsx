@@ -29,22 +29,13 @@ const defaultForm: SpendAuditForm = {
   ],
 };
 
-// Generate or retrieve unique user ID
-const getUserId = (): string => {
-  let userId = localStorage.getItem("audit_user_id");
-  if (!userId) {
-    userId = uuidv4();
-    localStorage.setItem("audit_user_id", userId);
-  }
-  return userId;
-};
-
 export default function SpendForm() {
+
   const [formData, setFormData] = useState<SpendAuditForm>(defaultForm);
   const [result, setResult] = useState<any>(null);
   const [aiSummary, setAiSummary] = useState<string>("");
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
-  const [userId] = useState<string>(getUserId());
+ const [userId, setUserId] = useState<string>("");
 
   // Placeholder states for lead form features to prevent crashing if declared outside snippet
   const [leadForm, setLeadForm] = useState({ email: "", company: "", role: "", website: "" });
@@ -55,6 +46,21 @@ export default function SpendForm() {
   const [copied, setCopied] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [leadErrors, setLeadErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+  const getUserId = () => {
+    let storedUserId = localStorage.getItem("audit_user_id");
+
+    if (!storedUserId) {
+      storedUserId = uuidv4();
+      localStorage.setItem("audit_user_id", storedUserId);
+    }
+
+    setUserId(storedUserId);
+  };
+
+  getUserId();
+}, []);
 
   const validateSpendForm = (): boolean => {
     const newErrors: Record<string, string> = {};
