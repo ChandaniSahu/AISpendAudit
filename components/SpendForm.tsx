@@ -486,7 +486,6 @@ export default function SpendForm() {
                     updateTool(0, "seats", Number(e.target.value));
                   }
                 }}
-                defaultValue={0}
                 className={`w-full border rounded-xl px-4 py-3 ${errors.seats ? "border-red-500" : ""}`}
               />
               {errors.seats && <p className="text-red-500 text-sm mt-1">{errors.seats}</p>}
@@ -506,7 +505,6 @@ export default function SpendForm() {
                     teamSize: Number(e.target.value),
                   }));
                 }}
-                defaultValue={0}
                 className={`w-full border rounded-xl px-4 py-3 ${errors.teamSize ? "border-red-500" : ""}`}
               />
               {errors.teamSize && <p className="text-red-500 text-sm mt-1">{errors.teamSize}</p>}
