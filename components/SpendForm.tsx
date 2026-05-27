@@ -6,7 +6,7 @@ import { generateAudit } from "@/lib/auditEngine";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
-import { ToolSpend, SpendAuditForm ,PrimaryUseCase} from "@/types/data";
+import { ToolSpend, SpendAuditForm, PrimaryUseCase } from "@/types/data";
 
 const useCases: PrimaryUseCase[] = [
   "coding",
@@ -35,7 +35,7 @@ export default function SpendForm() {
   const [result, setResult] = useState<any>(null);
   const [aiSummary, setAiSummary] = useState<string>("");
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
- const [userId, setUserId] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
 
   // Placeholder states for lead form features to prevent crashing if declared outside snippet
   const [leadForm, setLeadForm] = useState({ email: "", company: "", role: "", website: "" });
@@ -48,23 +48,22 @@ export default function SpendForm() {
   const [leadErrors, setLeadErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-  const getUserId = () => {
-    let storedUserId = localStorage.getItem("audit_user_id");
+    const getUserId = () => {
+      let storedUserId = localStorage.getItem("audit_user_id");
 
-    if (!storedUserId) {
-      storedUserId = uuidv4();
-      localStorage.setItem("audit_user_id", storedUserId);
-    }
+      if (!storedUserId) {
+        storedUserId = uuidv4();
+        localStorage.setItem("audit_user_id", storedUserId);
+      }
 
-    setUserId(storedUserId);
-  };
+      setUserId(storedUserId);
+    };
 
-  getUserId();
-}, []);
+    getUserId();
+  }, []);
 
   const validateSpendForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-    console.log("Validating form data:", formData);
     if (!formData.tools[0]?.toolId) {
       newErrors.tool = "Please select a tool";
     }
@@ -104,7 +103,6 @@ export default function SpendForm() {
     if (!validateLeadForm()) return; // Stop if validation fails
     try {
       if (leadForm.website) {
-        console.log("🚫 Bot detected — submission blocked");
         setLeadSubmitted(true); // Fake success to confuse bots
         return;
       }
@@ -157,7 +155,6 @@ export default function SpendForm() {
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
 
-      console.log("Lead submitted & email sent");
       setLeadSubmitted(true);
     } catch (error) {
       console.error("Lead submit error:", error);
@@ -335,7 +332,6 @@ export default function SpendForm() {
 
       const docRef = await addDoc(collection(db, "audits"), auditData);
       setAuditId(docRef.id);
-      console.log("Audit stored successfully with ID:", userId);
     } catch (error) {
       console.error("Error storing audit in Firebase:", error);
     }
@@ -344,12 +340,10 @@ export default function SpendForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateSpendForm()) return; // Stop if validation fails
-    console.log("FORM DATA:");
-    console.log(formData);
+   
 
     const auditResult = generateAudit(formData);
-    console.log("AUDIT RESULT:");
-    console.log(auditResult);
+   
 
     setResult(auditResult);
 
@@ -465,6 +459,11 @@ export default function SpendForm() {
                     updateTool(0, "monthlySpend", Number(e.target.value));
                   }
                 }}
+                onFocus={(e) => {
+                  if (formData.tools[0]?.monthlySpend === 0) {
+                    e.target.select(); // This highlights the '0' so typing immediately replaces it
+                  }
+                }}
                 className={`w-full border rounded-xl px-4 py-3 ${errors.spend ? "border-red-500" : ""}`}
                 placeholder="1999"
               />
@@ -486,6 +485,11 @@ export default function SpendForm() {
                     updateTool(0, "seats", Number(e.target.value));
                   }
                 }}
+                onFocus={(e) => {
+                  if (formData.tools[0]?.seats === 0) {
+                    e.target.select(); // This highlights the '0' so typing immediately replaces it
+                  }
+                }}
                 className={`w-full border rounded-xl px-4 py-3 ${errors.seats ? "border-red-500" : ""}`}
               />
               {errors.seats && <p className="text-red-500 text-sm mt-1">{errors.seats}</p>}
@@ -505,6 +509,11 @@ export default function SpendForm() {
                     teamSize: Number(e.target.value),
                   }));
                 }}
+                onFocus={(e) => {
+                  if (formData.teamSize === 0) {
+                    e.target.select(); // This highlights the '0' so typing immediately replaces it
+                  }
+                }}
                 className={`w-full border rounded-xl px-4 py-3 ${errors.teamSize ? "border-red-500" : ""}`}
               />
               {errors.teamSize && <p className="text-red-500 text-sm mt-1">{errors.teamSize}</p>}
@@ -515,12 +524,12 @@ export default function SpendForm() {
               <label className="block mb-2 font-medium">Primary Use Case</label>
               <select
                 value={formData.primaryUseCase}
-               onChange={(e) =>
-  setFormData((prev) => ({
-    ...prev,
-    primaryUseCase: e.target.value as PrimaryUseCase,
-  }))
-}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    primaryUseCase: e.target.value as PrimaryUseCase,
+                  }))
+                }
                 className="w-full border rounded-xl px-4 py-3"
               >
                 {useCases.map((item) => (
@@ -561,7 +570,7 @@ export default function SpendForm() {
             </div>
           ) : aiSummary && (
             <div className="rounded-[28px] border border-white/10 bg-[#0f172a] p-7 text-white shadow-xl">
-              <h3 className="text-2xl font-bold mb-4">AI-Powered Analysis</h3>
+              <h3 className="text-2xl font-bold mb-4">AI-Powered Summary</h3>
               <p className="text-lg leading-8 text-gray-300">{aiSummary}</p>
             </div>
           )}
@@ -782,85 +791,156 @@ export default function SpendForm() {
           </div>
 
           {/* LEAD CAPTURE */}
-          <div id="lead-form" className="rounded-[28px] border bg-white p-8 shadow-sm">
-            <h2 className="text-3xl font-black text-black">
-              Stay Updated
-            </h2>
-            <p className="mt-2 text-gray-500">
-              Get notified when new optimization opportunities apply to your stack.
-            </p>
+          {!leadSubmitted && (
+            <div id="lead-form" className="rounded-[28px] border bg-white p-8 shadow-sm relative overflow-hidden">
+              {/* Background subtle gradient */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-emerald-50 to-transparent -z-0" />
 
-            <div className="mt-8 grid md:grid-cols-2 gap-5 items-start">
-              {/* Honeypot */}
-              <input
-                type="text"
-                name="website"
-                style={{ display: 'none' }}
-                tabIndex={-1}
-                autoComplete="off"
-                value={leadForm.website || ""}
-                onChange={(e) =>
-                  setLeadForm((prev) => ({
-                    ...prev,
-                    website: e.target.value,
-                  }))
-                }
-              />
+              <div className="relative z-10">
+                {/* Lock Icon Section */}
+                <div className="flex items-start gap-5 mb-8">
+                  <div className="relative group cursor-pointer" onClick={() => document.getElementById("lead-email")?.focus()}>
+                    {/* Pulsing ring effect */}
+                    <div className="absolute inset-0 bg-emerald-400 rounded-full animate-ping opacity-20" />
 
-              <div className="min-h-[70px]">
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={leadForm.email}
-                  onChange={(e) => {
-                    setLeadErrors(prev => ({ ...prev, email: "" }));
-                    setLeadForm((prev) => ({ ...prev, email: e.target.value }));
-                  }}
-                  className={`border text-black rounded-2xl px-5 py-4 w-full ${leadErrors.email ? "border-red-500" : ""}`}
-                />
-                {leadErrors.email && <p className="text-red-500 text-sm mt-1">{leadErrors.email}</p>}
+                    {/* Lock icon container */}
+                    <div className="relative bg-gradient-to-br from-emerald-400 to-emerald-600 w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-200 transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
+                      {/* Lock icon */}
+                      <svg
+                        className="w-8 h-8 text-white transition-all duration-500 group-hover:scale-110"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div className="flex-1">
+                    <h2 className="text-3xl font-black text-black flex items-center gap-2">
+                      Unlock Your Shareable Report
+                      <span className="inline-block animate-bounce">🔓</span>
+                    </h2>
+                    <p className="mt-2 text-gray-500 leading-relaxed">
+                      Enter your email to generate a private link for your team.
+                      Your data stays confidential — only the savings is visible publicly.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Benefits badges */}
+                <div className="flex flex-wrap gap-3 mb-8">
+                  <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Private & Secure
+                  </span>
+                  <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    Share Instantly
+                  </span>
+                  <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                    Actionable Insights
+                  </span>
+                </div>
+
+                <div className="mt-8 grid md:grid-cols-2 gap-5 items-start">
+                  {/* Honeypot */}
+                  <input
+                    type="text"
+                    name="website"
+                    style={{ display: 'none' }}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={leadForm.website || ""}
+                    onChange={(e) =>
+                      setLeadForm((prev) => ({
+                        ...prev,
+                        website: e.target.value,
+                      }))
+                    }
+                  />
+
+                  <div className="min-h-[70px]">
+                    <input
+                      id="lead-email"
+                      type="email"
+                      placeholder="Email"
+                      value={leadForm.email}
+                      onChange={(e) => {
+                        setLeadErrors(prev => ({ ...prev, email: "" }));
+                        setLeadForm((prev) => ({ ...prev, email: e.target.value }));
+                      }}
+                      className={`border text-black rounded-2xl px-5 py-4 w-full ${leadErrors.email ? "border-red-500" : ""}`}
+                    />
+                    {leadErrors.email && <p className="text-red-500 text-sm mt-1">{leadErrors.email}</p>}
+                  </div>
+
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Company"
+                      value={leadForm.company}
+                      onChange={(e) =>
+                        setLeadForm((prev) => ({
+                          ...prev,
+                          company: e.target.value,
+                        }))
+                      }
+                      className="border text-black rounded-2xl px-5 py-4 w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Role"
+                      value={leadForm.role}
+                      onChange={(e) =>
+                        setLeadForm((prev) => ({
+                          ...prev,
+                          role: e.target.value,
+                        }))
+                      }
+                      className="border text-black rounded-2xl px-5 py-4 w-full"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleLeadSubmit}
+                    className="group relative rounded-2xl bg-black text-white px-6 py-4 font-semibold overflow-hidden transition-all duration-300 hover:bg-gray-900 hover:shadow-lg hover:shadow-gray-200 hover:-translate-y-0.5"
+                  >
+                    {/* Button shine effect */}
+                    <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+                    <span className="relative flex items-center justify-center gap-2">
+                      <svg className="w-5 h-5 group-hover:animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                      </svg>
+                      Unlock Report
+                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </span>
+                  </button>
+                </div>
               </div>
-
-              <div>
-                <input
-                  type="text"
-                  placeholder="Company"
-                  value={leadForm.company}
-                  onChange={(e) =>
-                    setLeadForm((prev) => ({
-                      ...prev,
-                      company: e.target.value,
-                    }))
-                  }
-                  className="border text-black rounded-2xl px-5 py-4 w-full"
-                />
-              </div>
-
-              <div>
-                <input
-                  type="text"
-                  placeholder="Role"
-                  value={leadForm.role}
-                  onChange={(e) =>
-                    setLeadForm((prev) => ({
-                      ...prev,
-                      role: e.target.value,
-                    }))
-                  }
-                  className="border text-black rounded-2xl px-5 py-4 w-full"
-                />
-              </div>
-
-              <button
-                onClick={handleLeadSubmit}
-                className="rounded-2xl bg-black text-white px-6 py-4 font-semibold"
-              >
-                Submit
-              </button>
-            </div>
-          </div>
+            </div>)}
 
           {/* SHAREABLE LINK */}
+          {/* SHAREABLE LINK - Show after submission */}
           {leadSubmitted && auditId && (
             <div className="rounded-[28px] bg-black text-white p-8">
               <h2 className="text-3xl font-black">
@@ -888,6 +968,37 @@ export default function SpendForm() {
                   className="rounded-2xl bg-white text-black px-6 py-4 font-semibold"
                 >
                   {copied ? "Copied!" : "Copy Link"}
+                </button>
+              </div>
+
+              {/* Divider */}
+              <div className="flex flex-col justify-center items-center mt-8 pt-8 border-t border-white/10">
+                <p className="text-gray-400 mb-4">
+                 Think your other subscriptions might be leaking money?
+                </p>
+                <button
+                  onClick={() => {
+                    // Reset all states
+                    setFormData(defaultForm);
+                    setResult(null);
+                    setAiSummary("");
+                    setAuditId(null);
+                    setLeadSubmitted(false);
+                    setLeadForm({ email: "", company: "", role: "", website: "" });
+                    setErrors({});
+                    setLeadErrors({});
+                    setCopied(false);
+                    localStorage.removeItem("audit-form");
+
+                    // Scroll to top
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="rounded-2xl bg-white/10 border border-white/20 text-white px-6 py-4 font-semibold hover:bg-white/20 transition-all duration-300 flex items-center gap-2 group"
+                >
+                  <svg className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Run a New Audit
                 </button>
               </div>
             </div>

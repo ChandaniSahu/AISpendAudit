@@ -15,13 +15,11 @@ export default function PublicAuditPage() {
     useEffect(() => {
         const fetchAudit = async () => {
             try {
-                console.log("Fetching audit:", auditId);
                 const docRef = doc(db, "audits", auditId as string);
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
                     const data = docSnap.data() as AuditData;
-                    console.log("Audit data:", data);
 
                     // Validate the data structure
                     if (!data.auditResult || !Array.isArray(data.auditResult)) {

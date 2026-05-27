@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SpendPreview() {
+  const router = useRouter();
   const [selectedTools, setSelectedTools] = useState<string[]>([
     "ChatGPT Plus",
     "GitHub Copilot",
@@ -108,7 +110,9 @@ export default function SpendPreview() {
                 </div>
               </div>
 
-              <button className="w-full rounded-xl bg-white px-6 py-4 font-bold text-black transition-all hover:scale-105">
+              <button
+                onClick={() => router.push("/audit")}
+                className="w-full rounded-xl bg-white px-6 py-4 font-bold text-black transition-all hover:scale-105">
                 Start Saving Now
               </button>
             </div>
