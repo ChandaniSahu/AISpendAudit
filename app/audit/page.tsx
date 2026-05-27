@@ -1,6 +1,6 @@
 "use client";
 
-import SpendForm from "@/components/SpendForm";
+import SpendForm from "@/app/components/SpendForm";
 
 export default function AuditPage() {
   return (

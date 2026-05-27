@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { pricingData } from "@/lib/pricingData";
-import { generateAudit } from "@/lib/auditEngine";
-import { db } from "@/lib/firebase";
+import { pricingData } from "@/app/lib/pricingData";
+import { generateAudit } from "@/app/lib/auditEngine";
+import { db } from "@/app/lib/firebase";
 import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 import { ToolSpend, SpendAuditForm, PrimaryUseCase } from "@/types/data";

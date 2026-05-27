@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db } from "@/app/lib/firebase";
 import { AuditData } from "@/types/data";
 
 export default function PublicAuditPage() {

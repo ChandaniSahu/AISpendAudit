@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { db } from "@/lib/firebase";
+import { db } from "@/app/lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 
 export default function CTA() {
